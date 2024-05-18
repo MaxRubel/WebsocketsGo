@@ -19,7 +19,7 @@ func AddMessageToDb(newMessage models.Message) error {
     defer db.Close()
 
 	fmt.Println("new message: ", newMessage)
-	
+
     query := `INSERT INTO Messages (name, message) VALUES (?, ?)`
     
     _, err = db.Exec(query, newMessage.Name, newMessage.Message)
@@ -35,16 +35,14 @@ func AddMessageToDb(newMessage models.Message) error {
 
 func GetAllMessages() ([]models.Message, error) {
 	db, err := sql.Open("sqlite3", "./db/db.sqlite3")
+
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database: %v", err)
 	}
+
 	defer db.Close()
 
 	rows, err := db.Query("SELECT * FROM Messages")
-
-	if err != nil {
-		return nil, fmt.Errorf("unable to Query DB: %v", err)
-	}
 
 	var messages []models.Message
 	for rows.Next(){

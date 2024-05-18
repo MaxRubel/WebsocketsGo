@@ -23,7 +23,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
         log.Println("Upgrade error:", err)
         return
     }
-	
+
     defer conn.Close()
 
     for {
@@ -41,8 +41,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		db.AddMessageToDb(parsedMessage)
-
-		fmt.Println("received message:", parsedMessage)
 
 		messages, err := db.GetAllMessages()
 
@@ -68,8 +66,8 @@ func main() {
     http.HandleFunc("/ws", wsHandler)
 
     log.Println("Server starting on port 8080...")
-    err := http.ListenAndServe(":8080", nil)
 
+    err := http.ListenAndServe(":8080", nil)
     if err != nil {
         log.Fatal("ListenAndServe error:", err)
     }
