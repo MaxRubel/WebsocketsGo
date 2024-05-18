@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/MaxRubel/WebsocketsGo/db"
+	"github.com/MaxRubel/WebsocketsGo/models"
 	"github.com/gorilla/websocket"
 )
 
@@ -19,18 +23,40 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
         log.Println("Upgrade error:", err)
         return
     }
+	
     defer conn.Close()
 
     for {
         messageType, message, err := conn.ReadMessage()
-        if err != nil {
-            log.Println("Read error:", err)
-            break
-        }
 
-        log.Printf("Received message: %s", message)
+		if err != nil {
+			fmt.Println("unable to print incoming message")
+			return
+		}
 
-        err = conn.WriteMessage(messageType, message)
+		parsedMessage, err := models.ParseJSONMessage(message)
+		if err != nil {
+			fmt.Println("Error parsing JSON:", err)
+			return
+		}
+
+		db.AddMessageToDb(parsedMessage)
+
+		fmt.Println("received message:", parsedMessage)
+
+		messages, err := db.GetAllMessages()
+
+		if err != nil {
+			log.Println(err)
+		}
+
+		messageF, err := json.Marshal(messages)
+
+		if err != nil {
+			log.Println(err)
+		}
+
+        err = conn.WriteMessage(messageType, messageF)
         if err != nil {
             log.Println("Write error:", err)
             break
@@ -40,10 +66,12 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     http.HandleFunc("/ws", wsHandler)
-	
+
     log.Println("Server starting on port 8080...")
     err := http.ListenAndServe(":8080", nil)
+
     if err != nil {
         log.Fatal("ListenAndServe error:", err)
     }
+
 }
